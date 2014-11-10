@@ -1,0 +1,81 @@
+########################################################################
+#
+# Student Name		: Vasudevan Nagendra 
+# SB ID			: 108482623
+# Professor		: Dr. Hussein Badr
+# e-mail		: vnagendra@cs.stonybrook.edu, 
+#			  vasu.018@gmail.com
+# Course ID		: CSE 534 
+# Project		: Emulab Project 1 - Module 2 
+# Project Details	: 4 nodes setup - Now makng node E as click router 
+#			  to test the dynamic routing functionalities. 
+#
+######################################################################
+
+#
+# Script to create the setup of 5 nodes
+#
+set ns [new Simulator]
+source tb_compat.tcl
+set maxnodes 5
+set lanstr ""
+
+#
+# Create four nodes A, B, C, D & E Which will be used as RIP nodes for testing.
+#
+set nodeA [$ns node]
+set nodeB [$ns node]
+set nodeC [$ns node]
+set nodeD [$ns node]
+set nodeE [$ns node]
+
+#
+# Creating the node A, B, C, D & E as FBSD OS
+#
+tb-set-node-os $nodeA FBSD-STD
+tb-set-node-os $nodeB FBSD-STD
+tb-set-node-os $nodeC FBSD-STD
+tb-set-node-os $nodeD FBSD-STD
+tb-set-node-os $nodeE UBUNTU10-STD
+
+#
+# Creating links between the nodes with following configurations:
+# Speed: 100Mbps
+# Link Negotiation: Full Duplex with propogation delay 0.
+#
+set linkAB [$ns duplex-link $nodeA $nodeB 100Mb 0ms DropTail]
+set linkBE [$ns duplex-link $nodeB $nodeE 100Mb 0ms DropTail]
+set linkCE [$ns duplex-link $nodeC $nodeE 100Mb 0ms DropTail]
+set linkDE [$ns duplex-link $nodeD $nodeE 100Mb 0ms DropTail]
+
+#
+# Setting route entries and static IP addresses for the setup
+#
+tb-set-ip-link $nodeA $linkAB 10.1.1.1 
+tb-set-ip-link $nodeB $linkAB 10.1.1.2
+
+tb-set-ip-link $nodeE $linkBE 10.0.1.11 
+tb-set-ip-link $nodeE $linkCE 10.0.1.12
+tb-set-ip-link $nodeE $linkDE 10.0.1.13
+
+tb-set-ip-link $nodeB $linkBE 10.0.1.1 
+tb-set-ip-link $nodeC $linkCE 10.0.1.2
+tb-set-ip-link $nodeD $linkDE 10.0.1.3
+
+set route0 [$nodeB program-agent -command "/usr/local/bin/sudo /sbin/route add -net 10.1.1.0/24 10.0.1.1"]
+set route1 [$nodeC program-agent -command "/usr/local/bin/sudo /sbin/route add -net 10.1.1.0/24 10.0.1.1"]
+set route2 [$nodeD program-agent -command "/usr/local/bin/sudo /sbin/route add -net 10.1.1.0/24 10.0.1.1"]
+$ns at 10.0 "$route0 start"
+$ns at 20.0 "$route1 start"
+$ns at 30.0 "$route2 start"
+
+#
+# Use static routing protocol, while using dynamic routing we could change it to BGP or RIP and so on.
+#
+$ns rtproto Static
+
+
+# Run the Simulator
+$ns run
+
+

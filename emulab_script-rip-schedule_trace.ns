@@ -1,0 +1,139 @@
+########################################################################
+#
+# project Members	: Vasudevan Nagendra, Abhijith betigeri
+# Professor	 	: Dr. Hussein Badr
+# project Member - 1 	: 108482623 - vnagendra@cs.stonybrook.edu
+# project Member - 2 	: 109229784 - abhijit.betigeri@stonybrook.edu
+# Course ID		: CSE 534 
+#
+# Project		: Emulab Project 1 - Module 4 
+# Project Details	: Testing RIP for Dynamic routing functionality 
+# 			  This script will create nodes and carryout the RIP testing
+#
+######################################################################
+
+#
+# Script to create the setup of 5 nodes
+#
+set ns [new Simulator] 
+source tb_compat.tcl
+set maxnodes 5 
+
+#
+# Create four nodes A, B, C, D & E Which will be used as RIP nodes for testing. 
+#
+set nodeA [$ns node]
+set nodeB [$ns node]
+set nodeC [$ns node]
+set nodeD [$ns node]
+set nodeE [$ns node]
+
+#
+# Creating the node A, B, C, D & E as FBSD OS
+#
+tb-set-node-os $nodeA FBSD-STD 
+tb-set-node-os $nodeB FBSD-STD 
+tb-set-node-os $nodeC FBSD-STD 
+tb-set-node-os $nodeD FBSD-STD 
+tb-set-node-os $nodeE FBSD-STD 
+
+#
+# Creating links between the nodes with following configurations:
+# Speed: 100Mbps
+# Link Negotiation: Full Duplex with propogation delay 0.
+#
+set linkAB [$ns duplex-link $nodeA $nodeB 100Mb 0ms DropTail]
+set linkBC [$ns duplex-link $nodeB $nodeC 100Mb 0ms DropTail]
+set linkBD [$ns duplex-link $nodeB $nodeD 100Mb 0ms DropTail]
+set linkCD [$ns duplex-link $nodeC $nodeD 100Mb 0ms DropTail]
+set linkDE [$ns duplex-link $nodeD $nodeE 100Mb 0ms DropTail]
+
+#
+# Initiate the routed daemon and add the proc entry for forwarding
+# the traffic, as normally linux systems will not by default set 
+# forwarding enabled. This is done on nodes B, C, D
+#
+set forward_entry_A [$nodeA program-agent -command "/usr/local/bin/sudo /sbin/sysctl -w net.inet.ip.forwarding=1"]
+set routed_start_A [$nodeA program-agent -command "/usr/local/bin/sudo /sbin/routed -s -P rdisc_interval=15"]
+set forward_entry_B [$nodeB program-agent -command "/usr/local/bin/sudo /sbin/sysctl -w net.inet.ip.forwarding=1"]
+set routed_start_B [$nodeB program-agent -command "/usr/local/bin/sudo /sbin/routed -s -P rdisc_interval=15"]
+set forward_entry_C [$nodeC program-agent -command "/usr/local/bin/sudo /sbin/sysctl -w net.inet.ip.forwarding=1"]
+set routed_start_C [$nodeC program-agent -command "/usr/local/bin/sudo /sbin/routed -s -P rdisc_interval=15"]
+set forward_entry_D [$nodeD program-agent -command "/usr/local/bin/sudo /sbin/sysctl -w net.inet.ip.forwarding=1"]
+set routed_start_D [$nodeD program-agent -command "/usr/local/bin/sudo /sbin/routed -s -P rdisc_interval=15"]
+set forward_entry_E [$nodeE program-agent -command "/usr/local/bin/sudo /sbin/sysctl -w net.inet.ip.forwarding=1"]
+set routed_start_E [$nodeE program-agent -command "/usr/local/bin/sudo /sbin/routed -s -P rdisc_interval=15"]
+
+$ns at 10.0 "$forward_entry_A start"
+$ns at 20.0 "$routed_start_A start"
+$ns at 30.0 "$forward_entry_B start"
+$ns at 40.0 "$routed_start_B start"
+$ns at 50.0 "$forward_entry_C start"
+$ns at 60.0 "$routed_start_C start"
+$ns at 70.0 "$forward_entry_D start"
+$ns at 80.0 "$routed_start_D start"
+$ns at 90.0 "$forward_entry_E start"
+$ns at 100.0 "$routed_start_E start"
+
+#
+# Demonstrate trace and scheduling:
+# 1. Create a UDP src and destination agents to communicate with each other.
+# We call this in NS terms as agent and sink.
+# 2. Create a CBR traffic source/generator and attach it to udp0
+# We are creating UDP packets of 1000 bytes size and at an interval
+# of every 5ms.
+# 3. Create a Null agent or a UDP destiantion traffic sink agent and
+# attach it to nodeE as we are trying to generate traffic between
+# nodeA <---UDP---> nodeE.
+# 4. Final step, We should connect the traffic sources with the traffic sinks
+#
+
+set udptraffic_gen_agent [new Agent/UDP]
+$ns attach-agent $nodeA $udptraffic_gen_agent
+
+set CBR_traffic_generator [new Application/Traffic/CBR]
+$CBR_traffic_generator set packetSize_ 1000
+$CBR_traffic_generator set interval_ 0.005
+$CBR_traffic_generator attach-agent $udptraffic_gen_agent
+
+set udp_dest_sink_point [new Agent/Null]
+$ns attach-agent $nodeE $udp_dest_sink_point
+
+$ns connect $udptraffic_gen_agent $udp_dest_sink_point
+
+#
+# Generate some events for the traffic pattern created
+# and allow it to be invoked after 30th second and 40th second
+# of starting the experiment - Dummy experiment.
+#
+#$linkAB trace
+#$linkBC trace
+#$linkBD trace
+#$linkCD trace
+#$linkDE trace
+#$linkBD trace packet
+#$linkBD trace monitor "icmp or udp"
+
+$linkBD trace monitor
+
+$ns at 120.0 "CBR_traffic_generator start"
+#$ns at 130.0 "$linkBC trace stop"
+#$ns at 140.0 "$linkBC trace start"
+#$ns at 150.0 "$linkBC trace snapshot"
+#$ns at 160.0 "$linkDE trace stop"
+#$ns at 170.0 "$linkDE trace start"
+#$ns at 180.0 "$linkDE trace snapshot"
+$ns at 190.0 "CBR_traffic_generator stop"
+
+#
+# Set the routing protocol as manual. 
+# This will allow us to configure RIP on nodes.
+#
+$ns rtproto Manual
+
+#
+# Run the Simulator
+#
+$ns run
+
+#$ns at 3600.0 "$ns swapout"

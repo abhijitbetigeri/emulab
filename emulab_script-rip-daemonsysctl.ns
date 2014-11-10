@@ -1,0 +1,66 @@
+########################################################################
+#
+# Project               	: EMULAB PROJECT - MODULE 5 
+# Project Details       	: 5 node router setup for Testing RIP Functionality.
+# Professor             	: Dr. HUSSEIN BADR
+# Course               		: CSE 534 - SPRING 14
+# Student1              	: VASUDEVAN NAGENDRA [108482623]
+# Student2              	: ABHIJIT BETIGERI [109229784]
+# e-mail               		: vnagendra@cs.stonybrook.edu, 
+#                      		  abhijit.betigeri@stonybrook.edu
+#
+######################################################################
+#
+# Script to create the setup of 5 nodes
+#
+set ns [new Simulator] 
+source tb_compat.tcl
+set maxnodes 5 
+
+#
+# Create four nodes A, B, C, D & E Which will be used for CLICK testing.
+# Especially Node E is used in as the Click Ethernet Switch 
+#
+set nodeA [$ns node]
+set nodeB [$ns node]
+set nodeC [$ns node]
+set nodeD [$ns node]
+set nodeE [$ns node]
+
+#
+# Creating the node A, B, C, D & E as FBSD OS
+#
+tb-set-node-os $nodeA FBSD-STD 
+tb-set-node-os $nodeB FBSD-STD 
+tb-set-node-os $nodeC FBSD-STD 
+tb-set-node-os $nodeD FBSD-STD 
+tb-set-node-os $nodeE FBSD-STD 
+
+#
+# Creating links between the nodes with following configurations:
+# Link Negotiation: Full Duplex with propogation delay 0.
+# Speed: 100Mbps
+#
+set linkAB [$ns duplex-link $nodeA $nodeB 100Mb 0ms DropTail]
+set linkBC [$ns duplex-link $nodeB $nodeC 100Mb 0ms DropTail]
+set linkBD [$ns duplex-link $nodeB $nodeD 100Mb 0ms DropTail]
+set linkCD [$ns duplex-link $nodeC $nodeD 100Mb 0ms DropTail]
+set linkDE [$ns duplex-link $nodeD $nodeE 100Mb 0ms DropTail]
+
+#
+# Initiate the routed daemon and add the proc entry for forwarding
+# the traffic, as normally linux systems will not by default set 
+# forwarding enabled. This is done on nodes B, C, D
+#
+
+#
+# Set the routing protocol as manual. 
+# This will allow us to configure RIP on nodes.
+#
+$ns rtproto Manual
+
+#
+# Run the Simulator
+#
+$ns run
+

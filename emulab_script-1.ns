@@ -1,0 +1,51 @@
+########################################################################
+#
+# Project		: EMULAB PROJECT - MODULE 1
+# Module Details	: 4 nodes setup connected to Lan hub for testing 
+#			  basic connectivity check.
+# Professor		: Dr. HUSSEIN BADR
+# Course 		: CSE 534 - SPRING 14 
+# Student1 		: VASUDEVAN NAGENDRA [108482623] 
+# Student2		: ABHIJIT BETIGERI [109229784]
+# e-mail		: vnagendra@cs.stonybrook.edu, 
+#			  abhijit.betigeri@stonybrook.edu
+#
+######################################################################
+#
+# New simulator Instance
+#
+set ns [new Simulator] 
+source tb_compat.tcl
+set lanstr ""
+
+#
+# Create four nodes A, B, C & D for testing. 
+#
+
+set nodeA [$ns node]
+tb-set-node-os $nodeA RHL-STD
+
+set nodeB [$ns node]
+tb-set-node-os $nodeB RHL-STD
+
+set nodeC [$ns node]
+tb-set-node-os $nodeC RHL-STD
+
+set nodeD [$ns node]
+tb-set-node-os $nodeD FBSD-STD 
+
+append lanstr "nodeB "
+append lanstr "nodeC "
+append lanstr "nodeD "
+
+set link0 [$ns duplex-link $nodeB $nodeA 30Mb 50ms DropTail]
+tb-set-link-loss $link0 0.01
+set lan0 [$ns make-lan "$lanstr" 100Mb 0ms]
+
+# Use static routing protocol for testing the basic functionality.
+$ns rtproto Static
+
+# Run the Simulator
+$ns run
+
+

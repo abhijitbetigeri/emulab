@@ -1,0 +1,50 @@
+########################################################################
+#
+# Student Name		: Vasudevan Nagendra 
+# SB ID			: 108482623
+# Professor		: Dr. Hussein Badr
+# e-mail		: vnagendra@cs.stonybrook.edu, 
+#			  vasu.018@gmail.com
+# Course ID		: CSE 534 
+# Project		: Emulab Project 1 - Module 1
+# Project Details	: TTCP experimentation 
+#
+######################################################################
+
+# Script to create the setup of 4 nodes
+set ns [new Simulator] 
+source tb_compat.tcl
+set maxnodes 4
+set lanstr ""
+
+set nodeA [$ns node]
+set nodeB [$ns node]
+set nodeC [$ns node]
+set nodeD [$ns node]
+set nodeE [$ns node]
+set nodeF [$ns node]
+
+tb-set-node-os $nodeA FBSD-STD 
+tb-set-node-os $nodeB RHL-STD
+tb-set-node-os $nodeC FBSD-STD 
+tb-set-node-os $nodeD FBSD-STD 
+tb-set-node-os $nodeE FBSD-STD 
+tb-set-node-os $nodeF FBSD-STD 
+
+append lanstr "nodeB "
+append lanstr "nodeC "
+
+set link0 [$ns duplex-link $nodeB $nodeA 100Mb 0ms DropTail]
+tb-set-link-loss $link0 0.01
+$ns duplex-link $nodeC $nodeD 100Mb 0ms DropTail]
+$ns duplex-link $nodeD $nodeE 100Mb 0ms DropTail]
+$ns duplex-link $nodeE $nodeF 100Mb 0ms DropTail]
+
+
+set lan0 [$ns make-lan "$lanstr" 100Mb 0ms]
+
+
+$ns rtproto Static
+$ns run
+
+$ns at 3000.0 "$ns swapout"
