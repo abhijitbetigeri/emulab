@@ -1,0 +1,4 @@
+emulab
+======
+
+EMULab -­‐ Testing switching &amp; routing functionalities with click, ttcp, routed.The aim of this experiment is to carryout the basic protocol testing related RIP, Switching and Routing – both static &amp; dynamic on EMULab Test Environment. The networking components used in this experiment such as Click Modular switch (as Ethernet switch), routed (as RIP daemon) &amp; ttcp for testing the TCP/UDP throughput performance. Click is used to carryout the basic Ethernet switching functionality check. The routed daemon is used to check the dynamic routing functionality. Test is carried out to show the route readjustment with respect to the RIP when any link fails and also the effort is taken to show the count to infinity problem with RIP, as the routed daemon used is RIPv2 it is not much easier for us to reproduce this scenario.
